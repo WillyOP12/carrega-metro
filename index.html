@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<!-- Created with https://studio.penguinmod.com/PenguinMod-Packager/ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- We only include this to explicitly loosen the CSP of various packager environments. It does not provide any security. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:">
+  <title>Pantalla de càrrega del metro</title>
+  <style>
+    body {
+      color: #ffffff;
+      font-family: sans-serif;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    :root, body.is-fullscreen {
+      background-color: #000000;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    h1 {
+      font-weight: normal;
+    }
+    a {
+      color: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    #app, #loading, #error, #launch {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #000000;
+    }
+    #launch {
+      background-color: rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+    }
+    
+    #loading {
+      
+    }
+    .progress-bar-outer {
+      border: 1px solid currentColor;
+      height: 10px;
+      width: 200px;
+      max-width: 200px;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      width: 0;
+      background-color: currentColor;
+    }
+    .loading-text, noscript {
+      font-weight: normal;
+      font-size: 36px;
+      margin: 0 0 16px;
+    }
+    .loading-image {
+      margin: 0 0 16px;
+    }
+    #error-message, #error-stack {
+      font-family: monospace;
+      max-width: 600px;
+      white-space: pre-wrap;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    #error-stack {
+      text-align: left;
+      max-height: 200px;
+      overflow: auto;
+    }
+    
+    
+    .sc-canvas {
+      cursor: none;
+    }
+    .sc-monitor-root[data-opcode^="data_"] .sc-monitor-value-color {
+      background-color: #ff8c1a;
+    }
+    .sc-monitor-row-value-outer {
+      background-color: #fc662c;
+    }
+    .sc-monitor-row-value-editing .sc-monitor-row-value-outer {
+      background-color: #e25b27;
+    }
+    
+  </style>
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI0MjEuMjAyNjYiIGhlaWdodD0iMzE4LjUyNDk3IiB2aWV3Qm94PSIwLDAsNDIxLjIwMjY2LDMxOC41MjQ5NyI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTEwOS4zOTg2NywtMjAuNzM3NTEpIj48ZyBzdHJva2U9Im5vbmUiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCI+PHBhdGggZD0iTTExMi4wMDQyNiwyNDAuMzcyNzVjMCwwIC0yNi4yOTI4MiwtOTEuMzUxODYgODguMTY2MjEsLTE3MC4xNDA1OWM3MC43MTI0NCwtNDguNjgyMSAxODEuODk2MDgsLTY0LjA3MTk0IDI1MS4wODMsLTM0LjM2OTEyYzYzLjMwOTE3LDI3LjIzNTA1IDkzLjc3NDc2LDc4LjkyMzM0IDcyLjczMTUyLDE0OC4xMTAyNmMtMTIuNTk4ODIsNDEuNTExNDggLTU2LjE5MzQ3LDg5LjExMjMgLTExMi41MTYyMiwxMjAuNTUxNzNjLTM3LjU1MDAxLDIwLjk2MDQ1IC04MC43NTc0MiwzNC43Mzc0NiAtMTI0LjIwODk0LDM0LjczNzQ2Yy0xMDguNjI2MTYsMCAtMTQzLjQ4ODgyLC01OC40MTg1MyAtMTQzLjQ4ODgyLC0xMTAuMTk2NTRjMCwtOTguMzk2MTggMTE3Ljg2OTAyLC0xNTEuNjU0ODYgMTE3Ljg2OTAyLC0xNTEuNjU0ODZjLTE1MS4xNjEzLDQ1LjYzMTA2IC0xNDkuNjM1NzgsMTYyLjk2MTY3IC0xNDkuNjM1NzgsMTYyLjk2MTY3IiBmaWxsPSIjZTMwNjEzIi8+PHBhdGggZD0iTTIyMC4xMzY4NiwxMzkuMDE1MjZoNjcuMTIyOThsLTUuNjUzNDEsMjAuMjM1NmgtMjAuNjg0MjhsLTE3LjIyOTQzLDYxLjUxNDQ0aC0yNS43NTQ0MWwxNy4yMjk0MywtNjEuNTE0NDRoLTIwLjcyOTE2ek0yNzMuMDM2NTksMjIwLjc2NTNsMjIuODM3OTYsLTgxLjYxNTQ0aDM2Ljg4MTc0bC0wLjQ5MzU1LDM3LjY4OTM3Yy0wLjQ0ODY5LDguMDc2MyAtMC42MjgxNiw5LjkxNTg5IC0xLjUyNTUyLDE3LjMxOTE2YzQuMzA3MzYsLTEwLjA1MDUgNS4zODQyMSwtMTIuMTE0NDQgOS40MjIzNSwtMjAuMDExMjdsMTkuMDI0MTYsLTM0Ljk5NzI3aDM2Ljg4MTc0bC0yMi44Mzc5Niw4MS42MTU0NGgtMjQuNTQyOTZsMTMuMTkxMjgsLTQ3LjE1NjU5YzEuODM5NiwtNi4wMTIzNSAyLjMzMzE2LC03LjUzNzg3IDQuNzU2MDUsLTE0LjQ0NzU5Yy0zLjE0MDc4LDYuMTAyMDkgLTMuNjc5Miw3LjI2ODY2IC02Ljk1NDU4LDEzLjE5MTI4bC0yNy4xMDA0Niw0OC40MTI5aC0xOS4xNTg3N2wwLjIyNDM1LC00NS45MDAyN2MwLjA4OTc0LC02LjU5NTY0IC0wLjAwMDAxLC02LjczMDI2IDAuNDQ4NjgsLTE1LjI1NTIzYy0xLjAzMTk3LDUuMTE0OTkgLTEuMzAxMTgsNi4zNzEzIC0yLjYwMjM2LDEwLjk5Mjc0bC0xNC4wNDM3OCw1MC4xNjI3NmgtMjQuNDk4MXpNMzg2LjI4NDE4LDIyMC43NjUzbDIyLjgzNzk2LC04MS42MTU0NGg0OC4zMjMxNmM1LjAyNTI1LDAuMjI0MzQgMTQuNDAyNzIsMC41ODMyOCAxOC44NDQ2OSw2LjU5NTY0YzIuNzM2OTcsMy40NTQ4NiAzLjA5NTkxLDguODgzOTMgMS42MTUyNiwxNC4wODg2NWMtMS43MDUsNi4wMTIzNSAtNS42NTM0LDExLjA4MjQ2IC05Ljc4MTI4LDE0LjMxMjk4Yy0yLjgyNjcsMi4xOTg1NSAtNS4xNTk4NywzLjE0MDc5IC04LjE2NjA0LDQuMzk3MWMzLjA5NTkxLDAuOTQyMjMgNS44Nzc3NiwxLjc0OTg2IDguMjEwOSw0Ljk4MDM4YzMuMzY1MTIsNC40ODY4MyAyLjY0NzIzLDkuODI2MTYgMS41MjU1MiwxMy44NjQzYy0xLjY2MDEzLDYuMTQ2OTYgLTUuMjk0NDYsMTIuNDczMzkgLTEwLjYzMzc5LDE2LjY0NjE0Yy03Ljg1MTk1LDYuMjM2NjkgLTE2LjM3NjkyLDYuNTA1OTEgLTIyLjc5MzA5LDYuNzMwMjVoLTQ5LjkzODQyek00NDQuOTI3MDUsMTU2LjQyNDE2aC0xNC44OTYyOWwtMy45MDM1NCwxMy44NjQzaDE0LjM1Nzg2YzIuNDIyODksMCA4LjQzNTI0LDAgMTAuMzY0NTgsLTYuODE5OThjMS44Mzk2LC02LjczMDI1IC0zLjYzNDMzLC02Ljk5OTQ1IC01LjkyMjYxLC03LjA4OTE5ek00MzYuOTQwNDksMTg3LjM4MzI5aC0xNS42MTQxN2wtNC40NDE5NywxNS44Mzg1MWgxNi4xOTc0NmMyLjM3ODAyLC0wLjE3OTQ3IDQuODQ1NzgsLTAuMjY5MjEgNy40MDMyNywtMi40Njc3NmMxLjY2MDEzLC0xLjI1NjMxIDMuMDA2MTgsLTMuMjMwNTEgMy41ODk0NywtNS4yOTQ0NWMyLjE1MzY3LC03LjYyNzYxIC00LjcxMTE3LC03Ljk4NjU2IC03LjA4OTE5LC04LjA3NjN6IiBmaWxsPSIjZmZmZmZmIi8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6MjEwLjYwMTMzMDY4MzgyOTY0OjE1OS4yNjI0ODUwNzY3MjYwNS0tPg==">
+</head>
+<body>
+  <div id="app"></div>
+
+  
+
+  <div id="loading" class="screen">
+    <noscript>Enable JavaScript</noscript>
+    
+    
+    
+  </div>
+
+  <div id="error" class="screen" hidden>
+    <h1>Error</h1>
+    <details>
+      <summary id="error-message"></summary>
+      <p id="error-stack"></p>
+    </details>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    const appElement = document.getElementById('app');
+    const launchScreen = document.getElementById('launch');
+    const loadingScreen = document.getElementById('loading');
+    const loadingInner = document.getElementById('loading-inner');
+    const errorScreen = document.getElementById('error');
+    const errorScreenMessage = document.getElementById('error-message');
+    const errorScreenStack = document.getElementById('error-stack');
+
+    const handleError = (error) => {
+      console.error(error);
+      if (!errorScreen.hidden) return;
+      errorScreen.hidden = false;
+      errorScreenMessage.textContent = '' + error;
+      let debug = error && error.stack || 'no stack';
+      debug += '\nUser agent: ' + navigator.userAgent;
+      errorScreenStack.textContent = debug;
+    };
+    const setProgress = (progress) => {
+      if (loadingInner) loadingInner.style.width = progress * 100 + '%';
+    };
+    const interpolate = (a, b, t) => a + t * (b - a);
+
+    try {
+      setProgress(0.1);
+
+      const scaffolding = new Scaffolding.Scaffolding();
+      scaffolding.width = 640;
+      scaffolding.height = 360;
+      scaffolding.resizeMode = "preserve-ratio";
+      scaffolding.editableLists = false;
+      scaffolding.usePackagedRuntime = true;
+      scaffolding.setup();
+      scaffolding.appendTo(appElement);
+
+      const vm = scaffolding.vm;
+      window.scaffolding = scaffolding;
+      window.vm = scaffolding.vm;
+      window.Scratch = {
+        vm,
+        renderer: vm.renderer,
+        audioEngine: vm.runtime.audioEngine,
+        bitmapAdapter: vm.runtime.v2BitmapAdapter,
+        videoProvider: vm.runtime.ioDevices.video.provider
+      };
+
+      vm.runtime.isPackagedProject = true;
+      scaffolding.setUsername("player####".replace(/#/g, () => Math.floor(Math.random() * 10)));
+      scaffolding.setAccentColor("#00c3ff");
+
+      try {
+        scaffolding.addCloudProvider(new Scaffolding.Cloud.WebSocketProvider(["wss://clouddata.turbowarp.org","wss://clouddata.turbowarp.xyz"], "p4-@Pantalla de Càrrega al Metro de Barcelona.pmp"));
+      } catch (error) {
+        console.error(error);
+      }
+
+      vm.setTurboMode(false);
+      if (vm.setInterpolation) vm.setInterpolation(true);
+      if (vm.setFramerate) vm.setFramerate(60);
+      if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(true);
+      if (vm.setRuntimeOptions) vm.setRuntimeOptions({
+        fencing: false,
+        miscLimits: false,
+        maxClones: 9999999999,
+        dangerousOptimizations: true
+      });
+      if (vm.setCompilerOptions) vm.setCompilerOptions({
+        enabled: true,
+        warpTimer: false
+      });
+      if (vm.renderer.setMaxTextureDimension) vm.renderer.setMaxTextureDimension(2048);
+
+      if (typeof ScaffoldingAddons !== 'undefined') {
+        ScaffoldingAddons.run(scaffolding, {"gamepad":false,"pointerlock":false,"specialCloudBehaviors":false,"unsafeCloudBehaviors":false,"pause":false});
+      }
+
+      scaffolding.setExtensionSecurityManager({
+        getSandboxMode: () => 'unsandboxed',
+        canLoadExtensionFromProject: () => true
+      });
+      for (const extension of ["data:text/javascript;base64,KGZ1bmN0aW9uKFNjcmF0Y2gpIHsKICAndXNlIHN0cmljdCc7CgogIGNsYXNzIFJhbmRvbUNvc3R1bWUgewogICAgZ2V0SW5mbygpIHsKICAgICAgcmV0dXJuIHsKICAgICAgICBpZDogJ3JhbmRvbWNvc3R1bWUnLAogICAgICAgIG5hbWU6ICdSYW5kb20gQ29zdHVtZScsCiAgICAgICAgYmxvY2tzOiBbCiAgICAgICAgICB7CiAgICAgICAgICAgIG9wY29kZTogJ3N3aXRjaFRvUmFuZG9tQ29zdHVtZScsCiAgICAgICAgICAgIGJsb2NrVHlwZTogU2NyYXRjaC5CbG9ja1R5cGUuQ09NTUFORCwKICAgICAgICAgICAgdGV4dDogJ2NhbnZpYXIgYSB2ZXN0aXQgYWxlYXRvcmknCiAgICAgICAgICB9CiAgICAgICAgXQogICAgICB9OwogICAgfQoKICAgIHN3aXRjaFRvUmFuZG9tQ29zdHVtZShhcmdzLCB1dGlsKSB7CiAgICAgIGNvbnN0IHNwcml0ZSA9IHV0aWwudGFyZ2V0OwogICAgICBjb25zdCBjb3N0dW1lcyA9IHNwcml0ZS5nZXRDb3N0dW1lcygpOwogICAgICBpZiAoY29zdHVtZXMubGVuZ3RoID4gMCkgewogICAgICAgIGNvbnN0IHJhbmRvbUluZGV4ID0gTWF0aC5mbG9vcihNYXRoLnJhbmRvbSgpICogY29zdHVtZXMubGVuZ3RoKTsKICAgICAgICBzcHJpdGUuc2V0Q29zdHVtZShyYW5kb21JbmRleCk7CiAgICAgIH0KICAgIH0KICB9CgogIFNjcmF0Y2guZXh0ZW5zaW9ucy5yZWdpc3RlcihuZXcgUmFuZG9tQ29zdHVtZSgpKTsKfSkoU2NyYXRjaCk7","data:text/javascript;,(function(Scratch)%20%7B%20%2F%2F%20Name%3A%20Browser%20Fullscreen%0A%2F%2F%20ID%3A%20fullscreen0419%0A%2F%2F%20Description%3A%20Enter%20and%20exit%20fullscreen%20mode.%0A%2F%2F%20By%3A%20Veggiecan0419%0A%2F%2F%20License%3A%20MIT%0A%0A%2F*%20generated%20l10n%20code%20*%2FScratch.translate.setup(%7B%22de%22%3A%7B%22_Browser%20Fullscreen%22%3A%22Browser%20Vollbildmodus%22%7D%2C%22fi%22%3A%7B%22_Browser%20Fullscreen%22%3A%22Selaimen%20koko%20n%C3%A4yt%C3%B6n%20tila%22%2C%22_%5BACTION%5D%20fullscreen%22%3A%22kytke%20koko%20n%C3%A4yt%C3%B6n%20tila%20%5BACTION%5D%22%2C%22_enter%22%3A%22p%C3%A4%C3%A4lle%22%2C%22_entered%22%3A%22p%C3%A4%C3%A4lle%22%2C%22_exit%22%3A%22pois%20p%C3%A4%C3%A4lt%C3%A4%22%2C%22_exited%22%3A%22pois%20p%C3%A4%C3%A4lt%C3%A4%22%2C%22_in%20browser%20fullscreen%3F%22%3A%22onko%20selaimen%20koko%20n%C3%A4yt%C3%B6n%20tila%20p%C3%A4%C3%A4ll%C3%A4%3F%22%2C%22_when%20browser%20fullscreen%20%5BENABLED%5D%22%3A%22kun%20selaimen%20koko%20n%C3%A4yt%C3%B6n%20tila%20kytket%C3%A4%C3%A4n%20%5BENABLED%5D%22%7D%2C%22it%22%3A%7B%22_Browser%20Fullscreen%22%3A%22Modalit%C3%A0%20Schermo%20Intero%22%2C%22_%5BACTION%5D%20fullscreen%22%3A%22%5BACTION%5D%20schermo%20intero%22%2C%22_enter%22%3A%22passa%20a%22%2C%22_entered%22%3A%22attivo%22%2C%22_exit%22%3A%22esci%20da%22%2C%22_exited%22%3A%22non%20attivo%22%2C%22_in%20browser%20fullscreen%3F%22%3A%22schermo%20intero%22%2C%22_when%20browser%20fullscreen%20%5BENABLED%5D%22%3A%22quando%20schermo%20intero%20%5BENABLED%5D%22%7D%2C%22ja%22%3A%7B%22_Browser%20Fullscreen%22%3A%22%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%95%E3%83%AB%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%22%2C%22_%5BACTION%5D%20fullscreen%22%3A%22%E3%83%95%E3%83%AB%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%5BACTION%5D%22%2C%22_enter%22%3A%22Enter%22%2C%22_entered%22%3A%22%E3%81%AB%E5%85%A5%E3%81%A3%E3%81%9F%22%2C%22_exit%22%3A%22%E3%82%92%E3%82%84%E3%82%81%E3%82%8B%22%2C%22_exited%22%3A%22%E3%82%92%E3%82%84%E3%82%81%E3%81%9F%22%2C%22_in%20browser%20fullscreen%3F%22%3A%22%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%81%8C%E3%83%95%E3%83%AB%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%22%2C%22_when%20browser%20fullscreen%20%5BENABLED%5D%22%3A%22%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%81%8C%E3%83%95%E3%83%AB%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%5BENABLED%5D%E3%81%A8%E3%81%8D%22%7D%2C%22ko%22%3A%7B%22_Browser%20Fullscreen%22%3A%22%EB%B8%8C%EB%9D%BC%EC%9A%B0%EC%A0%80%20%EC%A0%84%EC%B2%B4%ED%99%94%EB%A9%B4%22%2C%22_%5BACTION%5D%20fullscreen%22%3A%22%EC%A0%84%EC%B2%B4%ED%99%94%EB%A9%B4%20%5BACTION%5D%22%2C%22_enter%22%3A%22%EC%A7%84%EC%9E%85%ED%95%98%EA%B8%B0%22%2C%22_entered%22%3A%22%EC%A7%84%EC%9E%85%ED%96%88%EC%9D%84%20%EB%95%8C%22%2C%22_exit%22%3A%22%EB%81%9D%EB%82%B4%EA%B8%B0%22%2C%22_exited%22%3A%22%EB%81%9D%EB%83%88%EC%9D%84%20%EB%95%8C%22%2C%22_in%20browser%20fullscreen%3F%22%3A%22%EB%B8%8C%EB%9D%BC%EC%9A%B0%EC%A0%80%EA%B0%80%20%EC%A0%84%EC%B2%B4%ED%99%94%EB%A9%B4%EC%9D%B8%EA%B0%80%3F%22%2C%22_when%20browser%20fullscreen%20%5BENABLED%5D%22%3A%22%EB%B8%8C%EB%9D%BC%EC%9A%B0%EC%A0%80%EA%B0%80%20%EC%A0%84%EC%B2%B4%ED%99%94%EB%A9%B4%EC%9D%84%20%5BENABLED%5D%22%7D%2C%22nb%22%3A%7B%22_Browser%20Fullscreen%22%3A%22Nettleser%20Fullskjerm%22%2C%22_enter%22%3A%22skriv%20inn%22%7D%2C%22nl%22%3A%7B%22_Browser%20Fullscreen%22%3A%22Browser-volledig%20scherm%22%7D%2C%22ru%22%3A%7B%22_Browser%20Fullscreen%22%3A%22%D0%9F%D0%BE%D0%BB%D0%BD%D0%BE%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%BD%D1%8B%D0%B9%20%D0%91%D1%80%D0%B0%D1%83%D0%B7%D0%B5%D1%80%22%2C%22_%5BACTION%5D%20fullscreen%22%3A%22%D0%BF%D0%BE%D0%BB%D0%BD%D1%8B%D0%B9%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%20%5BACTION%5D%22%2C%22_enter%22%3A%22%D0%B2%D0%B2%D0%BE%D0%B4%22%2C%22_entered%22%3A%22%D0%B2%D0%BE%D1%88%D1%91%D0%BB%22%2C%22_exit%22%3A%22%D0%B2%D1%8B%D1%85%D0%BE%D0%B4%22%2C%22_exited%22%3A%22%D0%B2%D1%8B%D1%88%D0%B5%D0%BB%22%2C%22_in%20browser%20fullscreen%3F%22%3A%22%D0%B1%D1%80%D0%B0%D1%83%D0%B7%D0%B5%D1%80%20%D0%B2%20%D0%BF%D0%BE%D0%BB%D0%BD%D0%BE%D0%BC%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B5%3F%22%2C%22_when%20browser%20fullscreen%20%5BENABLED%5D%22%3A%22%D0%BA%D0%BE%D0%B3%D0%B4%D0%B0%20%D0%B1%D1%80%D0%B0%D1%83%D0%B7%D0%B5%D1%80%20%5BENABLED%5D%20%D0%BF%D0%BE%D0%BB%D0%BD%D1%8B%D0%B9%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%22%7D%2C%22uk%22%3A%7B%22_Browser%20Fullscreen%22%3A%22%D0%9F%D0%BE%D0%B2%D0%BD%D0%BE%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%D0%BD%D0%B8%D0%B9%20%D0%A0%D0%B5%D0%B6%D0%B8%D0%BC%22%2C%22_%5BACTION%5D%20fullscreen%22%3A%22%5BACTION%5D%20%D0%BF%D0%BE%D0%B2%D0%BD%D0%BE%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%D0%BD%D0%B8%D0%B9%20%D1%80%D0%B5%D0%B6%D0%B8%D0%BC%22%2C%22_enter%22%3A%22%D1%83%D0%B2%D1%96%D0%BC%D0%BA%D0%BD%D1%83%D1%82%D0%B8%22%2C%22_entered%22%3A%22%D1%83%D0%B2%D1%96%D0%BC%D0%BA%D0%BD%D0%B5%D0%BD%D0%BE%22%2C%22_exit%22%3A%22%D0%B2%D0%B8%D0%BC%D0%BA%D0%BD%D1%83%D1%82%D0%B8%22%2C%22_exited%22%3A%22%D0%B2%D0%B8%D0%BC%D0%BA%D0%BD%D0%B5%D0%BD%D0%BE%22%2C%22_in%20browser%20fullscreen%3F%22%3A%22%D0%BD%D0%B0%20%D0%B2%D0%B5%D1%81%D1%8C%20%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%3F%22%2C%22_when%20browser%20fullscreen%20%5BENABLED%5D%22%3A%22%D0%BA%D0%BE%D0%BB%D0%B8%20%D0%BF%D0%BE%D0%B2%D0%BD%D0%BE%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%D0%BD%D0%B8%D0%B9%20%D1%80%D0%B5%D0%B6%D0%B8%D0%BC%20%5BENABLED%5D%22%7D%2C%22zh-cn%22%3A%7B%22_Browser%20Fullscreen%22%3A%22%E5%85%A8%E5%B1%8F%E6%A8%A1%E5%BC%8F%22%2C%22_%5BACTION%5D%20fullscreen%22%3A%22%5BACTION%5D%E5%85%A8%E5%B1%8F%E6%A8%A1%E5%BC%8F%22%2C%22_entered%22%3A%22%E8%BF%9B%E5%85%A5%22%2C%22_exit%22%3A%22%E9%80%80%E5%87%BA%22%2C%22_exited%22%3A%22%E9%80%80%E5%87%BA%22%2C%22_in%20browser%20fullscreen%3F%22%3A%22%E6%B5%8F%E8%A7%88%E5%99%A8%E5%85%A8%E5%B1%8F%E5%90%97%EF%BC%9F%22%2C%22_when%20browser%20fullscreen%20%5BENABLED%5D%22%3A%22%E5%BD%93%5BENABLED%5D%E6%B5%8F%E8%A7%88%E5%99%A8%E5%85%A8%E5%B1%8F%22%7D%7D)%3B%2F*%20end%20generated%20l10n%20code%20*%2F(function%20(Scratch)%20%7B%0A%20%20%22use%20strict%22%3B%0A%20%20const%20icon%20%3D%0A%20%20%20%20%22data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI2My4yNjc0MiIgaGVpZ2h0PSI2My4xODQ5NSIgdmlld0JveD0iMCwwLDYzLjI2NzQyLDYzLjE4NDk1Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjA4LjM2NjI5LC0xNDguNDA3NTMpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLWRhc2hhcnJheT0iIiBzdHJva2UtZGFzaG9mZnNldD0iMCIgc3R5bGU9Im1peC1ibGVuZC1tb2RlOiBub3JtYWwiPjxwYXRoIGQ9IiIgZmlsbD0iI2ZmZDI0ZCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9IiIgZmlsbD0iIzAxMDEwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9IiIgZmlsbD0iIzAxMDEwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9IiIgZmlsbD0iIzAxMDEwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9IiIgZmlsbD0iIzAxMDEwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9IiIgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9IiIgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNjkuNjMzNzEsMTgwYzAsMTYuMzQzNDcgLTEzLjI2NzQ3LDI5LjU5MjQ4IC0yOS42MzM3MSwyOS41OTI0OGMtMTYuMzY2MjUsMCAtMjkuNjMzNzEsLTEzLjI0OTAxIC0yOS42MzM3MSwtMjkuNTkyNDhjMCwtMTYuMzQzNDcgMTMuMjY3NDcsLTI5LjU5MjQ3IDI5LjYzMzcxLC0yOS41OTI0N2MxNi4zNjYyNSwwIDI5LjYzMzcxLDEzLjI0OSAyOS42MzM3MSwyOS41OTI0N3oiIGZpbGw9IiNmZmQyNGQiIHN0cm9rZT0iI2ZmZDI0ZCIgc3Ryb2tlLXdpZHRoPSI0Ii8%2BPGcgc3Ryb2tlLXdpZHRoPSI1Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiPjxwYXRoIGQ9Ik0yNjAuMjA3MDEsMTY3LjcwODg3YzAsMCAtMy43NDA3NSwtMS45MjU0NCAtNS4xOTI2MywtMi42NzI3NmMtMS4wNDg4LC0wLjUzOTg0IC0xLjQ3OTgyLC0wLjk5NjMxIC0xLjQ3OTgyLC0wLjk5NjMxbDYuNjgyMzksLTAuMjE1Njl6Ii8%2BPGc%2BPHBhdGggZD0iTTIyNy45OTM3NiwxOTYuMDEwNDFsMjQuMTE4NywtMzAuNTQ3OTdsMi4xODE5OSwxLjcyMjc2bC0yNC4xMTg3LDMwLjU0Nzk3eiIvPjxwYXRoIGQ9Ik0yNTguMTI3ODQsMTkyLjk2MTIybC0zNS4yMjk0OSwtMjUuMjk0NjZsMC45NzI4OCwtMS4zNTQ5OWwzNS4yMjk0OSwyNS4yOTQ2NnoiLz48cGF0aCBkPSJNMjI1LjM4ODcsMTYyLjM1NzIxYzAsMCAtMi42NzQ1NCwzLjQzOTM1IC0zLjcxMjYsNC43NzQyNWMtMC43NDk4NywwLjk2NDMgLTEuMjg3MzQsMS4zMDg5MSAtMS4yODczNCwxLjMwODkxbDEuMjA1MjksLTYuOTQ4OTZ6Ii8%2BPHBhdGggZD0iTTI1Ni4wOTcxMiwxOTUuNDE3NDFjMCwwIDMuMTk3ODMsLTIuOTU5MDkgNC40Mzg5OSwtNC4xMDc1OWMwLjg5NjU5LC0wLjgyOTY1IDEuNDgyOSwtMS4wODIzNSAxLjQ4MjksLTEuMDgyMzVsLTIuMzE4MzQsNi42NjA3OXoiLz48cGF0aCBkPSJNMjI1LjAzMDcxLDE5NS40MTMwN2MwLDAgMy42NDk1NiwyLjM3OTcxIDUuMDY2MDQsMy4zMDMzNGMxLjAyMzI0LDAuNjY3MjEgMS40MTEyOSwxLjE3NDIgMS40MTEyOSwxLjE3NDJsLTcuMDI1MDUsLTAuNjI0MXoiLz48L2c%2BPC9nPjxwYXRoIGQ9Ik0yMzIuOTYyNDgsMTgxLjk4NjUxbDcuMTQ2NjYsLTEwLjgyODAzbDEwLjY3MzM2LDcuMDQ0NTdsLTcuMTQ2NjYsMTAuODI4MDN6IiBmaWxsPSIjZmZkMjRkIiBzdHJva2U9Im5vbmUiLz48L2c%2BPC9nPjwvZz48L3N2Zz4%3D%22%3B%0A%0A%20%20const%20isFullscreenEnabled%20%3D%20()%20%3D%3E%20%7B%0A%20%20%20%20if%20(typeof%20document.fullscreenElement%20!%3D%3D%20%22undefined%22)%20%7B%0A%20%20%20%20%20%20return%20document.fullscreenElement%20!%3D%3D%20null%3B%0A%20%20%20%20%7D%0A%20%20%20%20if%20(typeof%20document.webkitFullscreenElement%20!%3D%3D%20%22undefined%22)%20%7B%0A%20%20%20%20%20%20return%20document.webkitFullscreenElement%20!%3D%3D%20null%3B%0A%20%20%20%20%7D%0A%20%20%20%20return%20false%3B%0A%20%20%7D%3B%0A%0A%20%20const%20enterFullscreen%20%3D%20()%20%3D%3E%20%7B%0A%20%20%20%20if%20(document.documentElement.requestFullscreen)%20%7B%0A%20%20%20%20%20%20document.documentElement.requestFullscreen()%3B%0A%20%20%20%20%7D%20else%20if%20(document.documentElement.webkitRequestFullscreen)%20%7B%0A%20%20%20%20%20%20document.documentElement.webkitRequestFullscreen()%3B%0A%20%20%20%20%7D%0A%20%20%7D%3B%0A%0A%20%20const%20exitFullscreen%20%3D%20()%20%3D%3E%20%7B%0A%20%20%20%20if%20(document.exitFullscreen)%20%7B%0A%20%20%20%20%20%20document.exitFullscreen()%3B%0A%20%20%20%20%7D%20else%20if%20(document.webkitExitFullscreen)%20%7B%0A%20%20%20%20%20%20document.webkitExitFullscreen()%3B%0A%20%20%20%20%7D%0A%20%20%7D%3B%0A%0A%20%20const%20onFullScreenChange%20%3D%20()%20%3D%3E%20%7B%0A%20%20%20%20Scratch.vm.runtime.startHats(%22fullscreen0419_whenfullscreen%22%2C%20%7B%0A%20%20%20%20%20%20ENABLED%3A%20isFullscreenEnabled()%20%3F%20%22entered%22%20%3A%20%22exited%22%2C%0A%20%20%20%20%7D)%3B%0A%20%20%7D%3B%0A%20%20window.addEventListener(%22fullscreenchange%22%2C%20onFullScreenChange)%3B%0A%20%20window.addEventListener(%22webkitfullscreenchange%22%2C%20onFullScreenChange)%3B%0A%0A%20%20class%20FullscreenExtension%20%7B%0A%20%20%20%20getInfo()%20%7B%0A%20%20%20%20%20%20return%20%7B%0A%20%20%20%20%20%20%20%20id%3A%20%22fullscreen0419%22%2C%0A%20%20%20%20%20%20%20%20color1%3A%20%22%23F39016%22%2C%0A%20%20%20%20%20%20%20%20color2%3A%20%22%23C77612%22%2C%0A%20%20%20%20%20%20%20%20color3%3A%20%22%239D5D0E%22%2C%0A%20%20%20%20%20%20%20%20blockIconURI%3A%20icon%2C%0A%20%20%20%20%20%20%20%20name%3A%20Scratch.translate(%22Browser%20Fullscreen%22)%2C%0A%20%20%20%20%20%20%20%20blocks%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20%22fullscreen%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.COMMAND%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20Scratch.translate(%22%5BACTION%5D%20fullscreen%22)%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20ACTION%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20menu%3A%20%22fullscreenMenu%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20defaultValue%3A%20%22enter%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20%22isInFullscreen%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.BOOLEAN%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20Scratch.translate(%22in%20browser%20fullscreen%3F%22)%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20%22whenfullscreen%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.EVENT%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20Scratch.translate(%22when%20browser%20fullscreen%20%5BENABLED%5D%22)%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20isEdgeActivated%3A%20false%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20ENABLED%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20menu%3A%20%22whenfullscreenMenu%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20menus%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20fullscreenMenu%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20acceptReporters%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20items%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20Scratch.translate(%22enter%22)%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20%22enter%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20Scratch.translate(%22exit%22)%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20%22exit%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20whenfullscreenMenu%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%2F%2F%20Used%20for%20startHats%20filtering.%0A%20%20%20%20%20%20%20%20%20%20%20%20acceptReporters%3A%20false%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20items%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20Scratch.translate(%22entered%22)%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20%22entered%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20Scratch.translate(%22exited%22)%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20%22exited%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%7D%0A%20%20%20%20fullscreen(args)%20%7B%0A%20%20%20%20%20%20const%20action%20%3D%20Scratch.Cast.toString(args.ACTION).toLowerCase()%3B%0A%20%20%20%20%20%20if%20(action%20%3D%3D%3D%20%22enter%22%20%26%26%20!isFullscreenEnabled())%20%7B%0A%20%20%20%20%20%20%20%20enterFullscreen()%3B%0A%20%20%20%20%20%20%7D%20else%20if%20(action%20%3D%3D%3D%20%22exit%22%20%26%26%20isFullscreenEnabled())%20%7B%0A%20%20%20%20%20%20%20%20exitFullscreen()%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%20%20isInFullscreen()%20%7B%0A%20%20%20%20%20%20return%20isFullscreenEnabled()%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20Scratch.extensions.register(new%20FullscreenExtension())%3B%0A%7D)(Scratch)%3B%0A%20%7D)(Scratch)%3B"]) {
+        vm.extensionManager.loadExtensionURL(extension);
+      }
+
+      vm.runtime.on('PROJECT_RUN_STOP', () => {
+        if (!vm.isPaused || !vm.isPaused()) {
+          window.close();
+        }
+      });
+      vm.runtime.isProjectPermissionManagerDisabled = true;
+      vm.runtime.extensionRuntimeOptions.javascriptUnsandboxed = true;
+
+    } catch (e) {
+      handleError(e);
+    }
+  </script>
+  
+  
+    <script>
+      const getProjectData = (function() {
+        const storage = scaffolding.storage;
+        storage.onprogress = (total, loaded) => {
+          setProgress(interpolate(0.2, 0.98, loaded / total));
+        };
+        
+        storage.addWebStore(
+          [
+            storage.AssetType.ImageVector,
+            storage.AssetType.ImageBitmap,
+            storage.AssetType.Sound,
+            storage.AssetType.Font
+          ].filter(i => i),
+          (asset) => new URL('./assets/' + asset.assetId + '.' + asset.dataFormat, location).href
+        );
+        return () => new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          resolve(xhr.response);
+        };
+        xhr.onerror = () => {
+          if (location.protocol === 'file:') {
+            reject(new Error('Zip environment must be used from a website, not from a file URL.'));
+          } else {
+            reject(new Error('Request to load project data failed.'));
+          }
+        };
+        xhr.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setProgress(interpolate(0.1, 0.2, e.loaded / e.total));
+          }
+        };
+        xhr.responseType = 'arraybuffer';
+        xhr.open('GET', "./assets/project.json");
+        xhr.send();
+      });
+      })();
+    </script>
+  <script>
+    const run = async () => {
+      const projectData = await getProjectData();
+      await scaffolding.loadProject(projectData);
+      setProgress(1);
+      loadingScreen.hidden = true;
+      if (true) {
+        scaffolding.start();
+      } else {
+        launchScreen.hidden = false;
+        launchScreen.addEventListener('click', () => {
+          launchScreen.hidden = true;
+          scaffolding.start();
+        });
+        launchScreen.focus();
+      }
+    };
+    run().catch(handleError);
+  </script>
+</body>
+</html>
